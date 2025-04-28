@@ -10,9 +10,9 @@ package-lock.json
 frontend/.next/
 frontend/out/
 frontend/build/
-
 frontend/.vercel
 frontend/coverage/
+frontend/.env
 
 # Backend (Node.js / Prisma)
 backend/node_modules/
