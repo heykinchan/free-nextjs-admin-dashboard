@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchClients, fetchProducts, fetchDashboardStats } from "@/lib/api"; // adjust import path
+import { fetchClients } from "@/lib/api";
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -10,23 +10,20 @@ import {
   TableRow,
 } from "../ui/table";
 
-import Badge from "../ui/badge/Badge";
-import Image from "next/image";
-
-export default function BasicTableOne() {
-  const [products, setProducts] = useState<any[]>([]);
+export default function BasicTableClients() {
+  const [clients, setClients] = useState<any[]>([]);
 
   useEffect(() => {
-    async function loadProducts() {
+    async function loadClients() {
       try {
-        const data = await fetchProducts(); // 🛠 Call backend API
-        setProducts(data);
+        const data = await fetchClients();
+        setClients(data);
       } catch (error) {
-        console.error("Failed to load products:", error);
+        console.error("Failed to load clients:", error);
       }
     }
 
-    loadProducts();
+    loadClients();
   }, []);
 
   return (
@@ -37,28 +34,28 @@ export default function BasicTableOne() {
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Product Name
+                  Client Name
                 </TableCell>
                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Price
+                  Email
                 </TableCell>
                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Description
+                  Number of Subscriptions
                 </TableCell>
               </TableRow>
             </TableHeader>
 
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {products.map((product) => (
-                <TableRow key={product.id}>
+              {clients.map((client) => (
+                <TableRow key={client.id}>
                   <TableCell className="px-5 py-4 sm:px-6 text-start">
-                    {product.name}
+                    {client.name}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    ${product.price.toFixed(2)}
+                    {client.email}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {product.description}
+                    {client.subscriptions.length}
                   </TableCell>
                 </TableRow>
               ))}
@@ -69,4 +66,3 @@ export default function BasicTableOne() {
     </div>
   );
 }
-

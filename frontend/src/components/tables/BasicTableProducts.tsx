@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchClients, fetchProducts, fetchDashboardStats } from "@/lib/api"; // adjust import path
+import { fetchProducts } from "@/lib/api";
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -10,16 +10,13 @@ import {
   TableRow,
 } from "../ui/table";
 
-import Badge from "../ui/badge/Badge";
-import Image from "next/image";
-
-export default function BasicTableOne() {
+export default function BasicTableProducts() {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadProducts() {
       try {
-        const data = await fetchProducts(); // 🛠 Call backend API
+        const data = await fetchProducts();
         setProducts(data);
       } catch (error) {
         console.error("Failed to load products:", error);
@@ -32,7 +29,7 @@ export default function BasicTableOne() {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[1102px]">
+        <div className="min-w-[900px]">
           <Table>
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
@@ -69,4 +66,3 @@ export default function BasicTableOne() {
     </div>
   );
 }
-
