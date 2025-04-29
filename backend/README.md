@@ -3,7 +3,31 @@
 A RESTful API service for managing **Clients**, **Products**, and **Subscriptions**, built with **Node.js**, **Express.js**, **Prisma ORM**, and **PostgreSQL** (Supabase hosted).
 
 Server runs at:  
-`http://localhost:5000/`
+`http://localhost:5000/` or specified in the .env file
+
+--- 
+
+### How to initialise and run
+
+1. Create the .env file, can use the .env.example as reference
+```
+cp .env.example .env
+```
+2. Install dependencies
+```
+npm install
+```
+
+3. Ensure prisma is generated, can run the seed for dummy data
+```
+npx prisma generate
+npx prisma db pull 
+```
+
+4. Run the backend
+```
+node server.js 
+```
 
 ---
 
