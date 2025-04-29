@@ -1,8 +1,6 @@
 
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import BasicTableOne from "@/components/tables/BasicTableOne"; // Products Table
-import BasicTableClients from "@/components/tables/BasicTableClients"; // Clients Table
 import BasicTableSubscriptions from "@/components/tables/BasicTableSubscriptions"; // Subscriptions Table
 import { Metadata } from "next";
 import React from "react";

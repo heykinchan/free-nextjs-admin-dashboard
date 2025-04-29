@@ -35,7 +35,10 @@ const navItems: NavItem[] = [
   {
     name: "Forms",
     icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    subItems: [
+        { name: "Product", path: "/product-form", pro: false },
+        { name: "Subscription", path: "/subscription-form", pro: false },
+        ],
   },
   {
     name: "Tables",
@@ -44,6 +47,7 @@ const navItems: NavItem[] = [
         { name: "Subscriptions", path: "/subscriptions-table", pro: false },
         { name: "Clients", path: "/clients-table", pro: false },
         { name: "Products", path: "/products-table", pro: false },
+        { name: "Change Log", path: "/changeLog-table", pro: false },
         ],
   },
 

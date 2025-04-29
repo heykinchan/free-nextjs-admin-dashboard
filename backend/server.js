@@ -13,11 +13,13 @@ app.use(express.json());
 const clientRoutes = require('./routes/clients');
 const productRoutes = require('./routes/products');
 const subscriptionRoutes = require('./routes/subscriptions');
+const changeLogRoutes = require('./routes/changelogs');
 
 // Use routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/changelogs', changeLogRoutes);
 
 // Test route
 app.get('/', (req, res) => {

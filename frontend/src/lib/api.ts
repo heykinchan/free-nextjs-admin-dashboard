@@ -42,6 +42,12 @@ export async function fetchProducts() {
   return res.json();
 }
 
+export async function fetchProductById(id: number) {
+  const res = await fetch(`${API_URL}/products/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch product');
+  return res.json();
+}
+
 export async function createProduct(data: { name: string; price: number; description: string }) {
   const res = await fetch(`${API_URL}/products`, {
     method: 'POST',
@@ -71,7 +77,22 @@ export async function deleteProduct(id: number) {
 }
 
 // --------- Subscriptions ---------
-export async function createSubscription(clientId: number, data: { productId: number; startDate: string; endDate: string; status: string }) {
+export async function fetchSubscriptionById(id: number) {
+  const res = await fetch(`${API_URL}/subscriptions/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch subscription');
+  return res.json();
+}
+
+export async function fetchClientSubscriptions(clientId: number) {
+  const res = await fetch(`${API_URL}/subscriptions/client/${clientId}`);
+  if (!res.ok) throw new Error('Failed to fetch client subscriptions');
+  return res.json();
+}
+
+export async function createSubscription(
+  clientId: number,
+  data: { productId: number; startDate: string; endDate: string; status: string; customPrice?: number | null }
+) {
   const res = await fetch(`${API_URL}/subscriptions/client/${clientId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -81,7 +102,10 @@ export async function createSubscription(clientId: number, data: { productId: nu
   return res.json();
 }
 
-export async function updateSubscription(id: number, data: { startDate: string; endDate: string; status: string }) {
+export async function updateSubscription(
+    id: number,
+     data: { startDate: string; endDate: string; status: string; customPrice?: number | null }
+    ) {
   const res = await fetch(`${API_URL}/subscriptions/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -103,5 +127,12 @@ export async function deleteSubscription(id: number) {
 export async function fetchDashboardStats() {
   const res = await fetch(`${API_URL}/dashboard-stats`);
   if (!res.ok) throw new Error('Failed to fetch dashboard stats');
+  return res.json();
+}
+
+// --------- Change Logs ---------
+export async function fetchChangeLogs() {
+  const res = await fetch(`${API_URL}/changelogs`);
+  if (!res.ok) throw new Error('Failed to fetch change logs');
   return res.json();
 }

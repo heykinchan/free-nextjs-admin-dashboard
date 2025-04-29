@@ -24,12 +24,21 @@ model Product {
 }
 
 model Subscription {
-  id         Int       @id @default(autoincrement())
-  client     Client    @relation(fields: [clientId], references: [id])
-  clientId   Int
-  product    Product   @relation(fields: [productId], references: [id])
-  productId  Int
-  startDate  DateTime
-  endDate    DateTime
-  status     String
+  id            Int       @id @default(autoincrement())
+  client        Client    @relation(fields: [clientId], references: [id])
+  clientId      Int
+  product       Product   @relation(fields: [productId], references: [id])
+  productId     Int
+  startDate     DateTime
+  endDate       DateTime
+  status        String
+  customPrice   Float?    // <--- new field! Optional customised price
 }
+
+model ChangeLog {
+  id          Int      @id @default(autoincrement())
+  action      String   // e.g., 'CREATE_PRODUCT', 'UPDATE_SUBSCRIPTION'
+  details     String   // optional text field, JSON string or simple description
+  createdAt   DateTime @default(now())
+}
+

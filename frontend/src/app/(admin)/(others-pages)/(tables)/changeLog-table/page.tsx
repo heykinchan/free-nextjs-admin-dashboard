@@ -1,7 +1,7 @@
 
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import BasicTableClients from "@/components/tables/BasicTableClients"; // Clients Table
+import ChangeLogTable from "@/components/tables/ChangeLogTable";
 import { Metadata } from "next";
 import React from "react";
 
@@ -10,14 +10,14 @@ export const metadata: Metadata = {
   description: "This is the Basic Tables page for TailAdmin.",
 };
 
-export default function ClientsTable() {
+export default function ChangeLogsTable() {
   return (
     <div>
-      <PageBreadcrumb pageTitle="List of Clients" />
+      <PageBreadcrumb pageTitle="Change Logs" />
       <div className="space-y-6">
 
         <ComponentCard>
-          <BasicTableClients />
+          <ChangeLogTable />
         </ComponentCard>
 
       </div>

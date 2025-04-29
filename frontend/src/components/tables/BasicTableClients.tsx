@@ -9,9 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import Button from "../ui/button/Button"; // assuming you have a button component
 
 export default function BasicTableClients() {
   const [clients, setClients] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  const totalPages = Math.ceil(clients.length / pageSize);
 
   useEffect(() => {
     async function loadClients() {
@@ -25,6 +30,19 @@ export default function BasicTableClients() {
 
     loadClients();
   }, []);
+
+  const paginatedClients = clients.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePrev = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -46,7 +64,7 @@ export default function BasicTableClients() {
             </TableHeader>
 
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {clients.map((client) => (
+              {paginatedClients.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell className="px-5 py-4 sm:px-6 text-start">
                     {client.name}
@@ -61,6 +79,19 @@ export default function BasicTableClients() {
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center p-4">
+            <Button onClick={handlePrev} disabled={currentPage === 1}>
+              Previous
+            </Button>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button onClick={handleNext} disabled={currentPage === totalPages}>
+              Next
+            </Button>
+          </div>
         </div>
       </div>
     </div>
