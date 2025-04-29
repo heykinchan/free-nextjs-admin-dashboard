@@ -9,36 +9,35 @@ datasource db {
 }
 
 model Client {
-  id            Int           @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   name          String
-  email         String        @unique
+  email         String         @unique
   subscriptions Subscription[]
 }
 
 model Product {
-  id          Int           @id @default(autoincrement())
-  name        String
-  price       Float
-  description String
+  id            Int            @id @default(autoincrement())
+  name          String
+  price         Float
+  description   String
   subscriptions Subscription[]
 }
 
 model Subscription {
-  id            Int       @id @default(autoincrement())
-  client        Client    @relation(fields: [clientId], references: [id])
-  clientId      Int
-  product       Product   @relation(fields: [productId], references: [id])
-  productId     Int
-  startDate     DateTime
-  endDate       DateTime
-  status        String
-  customPrice   Float?    // <--- new field! Optional customised price
+  id          Int      @id @default(autoincrement())
+  clientId    Int
+  productId   Int
+  startDate   DateTime
+  endDate     DateTime
+  status      String
+  customPrice Float?
+  client      Client   @relation(fields: [clientId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
 }
 
 model ChangeLog {
-  id          Int      @id @default(autoincrement())
-  action      String   // e.g., 'CREATE_PRODUCT', 'UPDATE_SUBSCRIPTION'
-  details     String   // optional text field, JSON string or simple description
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  action    String
+  details   String
+  createdAt DateTime @default(now())
 }
-
