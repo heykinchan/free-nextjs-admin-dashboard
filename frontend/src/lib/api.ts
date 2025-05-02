@@ -132,9 +132,9 @@ export async function fetchSubscriptionsByClient(clientId: number) {
 }
 
 // --------- Dashboard ---------
-export async function fetchDashboardStats() {
-  const res = await fetch(`${API_URL}/dashboard-stats`);
-  if (!res.ok) throw new Error('Failed to fetch dashboard stats');
+export async function fetchDashboardMetrics() {
+  const res = await fetch(`${API_URL}/dashboard/metrics`);
+  if (!res.ok) throw new Error('Failed to fetch dashboard metrics');
   return res.json();
 }
 
