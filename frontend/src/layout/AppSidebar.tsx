@@ -38,6 +38,7 @@ const navItems: NavItem[] = [
     subItems: [
         { name: "Product", path: "/product-form", pro: false },
         { name: "Subscription", path: "/subscription-form", pro: false },
+        { name: "Sample Form", path: "/form-elements", pro: false },
         ],
   },
   {

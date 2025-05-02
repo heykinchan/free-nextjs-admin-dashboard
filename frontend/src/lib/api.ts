@@ -123,6 +123,14 @@ export async function deleteSubscription(id: number) {
   return res.json();
 }
 
+export async function fetchSubscriptionsByClient(clientId: number) {
+  const res = await fetch(`${API_URL}/subscriptions/client/${clientId}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch subscriptions for client");
+  }
+  return res.json();
+}
+
 // --------- Dashboard ---------
 export async function fetchDashboardStats() {
   const res = await fetch(`${API_URL}/dashboard-stats`);
