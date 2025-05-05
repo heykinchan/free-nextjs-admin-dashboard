@@ -21,7 +21,10 @@ router.get('/dashboard/metrics', async (req, res) => {
       include: { product: true },
     });
     const totalRevenue = subscriptions.reduce(
-      (acc, sub) => acc + (sub.customPrice ?? sub.product.price),
+      (acc, sub) =>
+        acc + (sub.discount != null
+          ? sub.product.unitPrice - sub.discount
+          : sub.product.unitPrice),
       0
     );
 

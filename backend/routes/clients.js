@@ -3,13 +3,38 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all clients
 router.get('/', async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const pageLimit = Math.max(1, parseInt(req.query.pageLimit) || 20);
+
+  const skip = (page - 1) * pageLimit;
+  const take = pageLimit;
+
   try {
-    const clients = await prisma.client.findMany({
-      include: { subscriptions: { include: { product: true } } }
+    const [clients, total] = await Promise.all([
+      prisma.client.findMany({
+        skip,
+        take,
+        include: {
+          subscriptions: {
+            include: { product: true }
+          }
+        }
+      }),
+      prisma.client.count()
+    ]);
+
+    const totalPages = Math.ceil(total / pageLimit);
+    const itemsInPage = clients.length;
+
+    res.json({
+      page,
+      pageLimit,
+      total,
+      totalPages,
+      itemsInPage,
+      data: clients,
     });
-    res.json(clients);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch clients' });
@@ -18,17 +43,19 @@ router.get('/', async (req, res) => {
 
 // Create a client
 router.post('/', async (req, res) => {
-  const { name, email } = req.body;
+  const { name, crmId, domain, notes } = req.body;
   try {
     const client = await prisma.client.create({
-      data: { name, email }
+      data: { name, crmId, domain, notes }
     });
 
-    // Log the change
     await prisma.changeLog.create({
       data: {
+        type: 'Client',
+        recordId: client.id,
         action: 'CREATE_CLIENT',
-        details: `Client ${client.name} created with email ${client.email}`,
+        details: `Client ${client.name} created.`,
+        actionBy: 'API'
       },
     });
 
@@ -42,18 +69,21 @@ router.post('/', async (req, res) => {
 // Update a client
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, email } = req.body;
+  const { name, crmId, domain, notes } = req.body;
+
   try {
     const updatedClient = await prisma.client.update({
-      where: { id: Number(id) },
-      data: { name, email }
+      where: { id },
+      data: { name, crmId, domain, notes }
     });
 
-    // Log the update
     await prisma.changeLog.create({
       data: {
+        type: 'Client',
+        recordId: updatedClient.id,
         action: 'UPDATE_CLIENT',
-        details: `Client ${updatedClient.id} updated to name ${updatedClient.name} and email ${updatedClient.email}`,
+        details: `Updated client ${updatedClient.name}.`,
+        actionBy: 'API'
       },
     });
 
@@ -67,26 +97,23 @@ router.put('/:id', async (req, res) => {
 // Delete a client
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
+
   try {
-    // Fetch client first
-    const clientToDelete = await prisma.client.findUnique({
-      where: { id: Number(id) }
-    });
+    const clientToDelete = await prisma.client.findUnique({ where: { id } });
 
     if (!clientToDelete) {
       return res.status(404).json({ error: 'Client not found' });
     }
 
-    // Delete client
-    await prisma.client.delete({
-      where: { id: Number(id) }
-    });
+    await prisma.client.delete({ where: { id } });
 
-    // Log the deletion
     await prisma.changeLog.create({
       data: {
+        type: 'Client',
+        recordId: clientToDelete.id,
         action: 'DELETE_CLIENT',
-        details: `Client ${clientToDelete.id} named ${clientToDelete.name} with email ${clientToDelete.email} has been deleted.`,
+        details: `Deleted client ${clientToDelete.name}.`,
+        actionBy: 'API'
       },
     });
 

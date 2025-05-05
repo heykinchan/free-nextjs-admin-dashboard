@@ -1,32 +1,35 @@
+
 # Subscription Management Backend API
 
-A RESTful API service for managing **Clients**, **Products**, and **Subscriptions**, built with **Node.js**, **Express.js**, **Prisma ORM**, and **PostgreSQL** (Supabase hosted).
+A RESTful API service for managing **Clients**, **Products**, **Subscriptions**, **Invoices**, and **Change Logs**, built with **Node.js**, **Express.js**, **Prisma ORM**, and **PostgreSQL** (Supabase hosted).
 
 Server runs at:  
-`http://localhost:5000/` or specified in the .env file
+`http://localhost:5000/` or as specified in your `.env` file.
 
---- 
+---
 
-### How to initialise and run
+## 🚀 How to initialise and run
 
-1. Create the .env file, can use the .env.example as reference
-```
+1. Create the .env file (use the .env.example as a reference):
+```bash
 cp .env.example .env
 ```
-2. Install dependencies
-```
+
+2. Install dependencies:
+```bash
 npm install
 ```
 
-3. Ensure prisma is generated, can run the seed for dummy data
-```
+3. Generate and apply Prisma schema and optionally seed the database:
+```bash
 npx prisma generate
-npx prisma db pull 
+npx prisma migrate dev --name init
+node prisma/seed.js
 ```
 
-4. Run the backend
-```
-node server.js 
+4. Run the backend:
+```bash
+node server.js
 ```
 
 ---
@@ -34,27 +37,20 @@ node server.js
 ## 📦 Client APIs
 
 | Method | Endpoint | Description |
-|:---|:---|:---|
-| `GET` | `/api/clients` | Fetch all clients (with their subscriptions and products) |
+|--------|----------|-------------|
+| `GET`  | `/api/clients?page=1&pageLimit=10` | Fetch paginated list of clients |
 | `POST` | `/api/clients` | Create a new client |
-| `PUT` | `/api/clients/:id` | Update a client’s name and email |
+| `PUT`  | `/api/clients/:id` | Update a client |
 | `DELETE` | `/api/clients/:id` | Delete a client |
 
-### ➡ Request Body (POST `/api/clients`)
+### Sample Request Body (POST/PUT)
 
 ```json
 {
   "name": "John Doe",
-  "email": "john@example.com"
-}
-```
-
-### ➡ Request Body (PUT `/api/clients/:id`)
-
-```json
-{
-  "name": "Updated Name",
-  "email": "updated@example.com"
+  "crmId": "crm-001",
+  "domain": "example.com",
+  "notes": "VIP client"
 }
 ```
 
@@ -63,29 +59,23 @@ node server.js
 ## 📦 Product APIs
 
 | Method | Endpoint | Description |
-|:---|:---|:---|
-| `GET` | `/api/products` | Fetch all products |
+|--------|----------|-------------|
+| `GET`  | `/api/products?page=1&pageLimit=10` | Fetch paginated and filtered list of products |
 | `POST` | `/api/products` | Create a new product |
-| `PUT` | `/api/products/:id` | Update a product’s name, price, and description |
+| `PUT`  | `/api/products/:id` | Update a product |
 | `DELETE` | `/api/products/:id` | Delete a product |
 
-### ➡ Request Body (POST `/api/products`)
+### Sample Request Body
 
 ```json
 {
   "name": "Pro Plan",
-  "price": 49.99,
-  "description": "Access to premium features"
-}
-```
-
-### ➡ Request Body (PUT `/api/products/:id`)
-
-```json
-{
-  "name": "Updated Plan",
-  "price": 59.99,
-  "description": "Updated feature list"
+  "year": 2025,
+  "createdBy": "admin",
+  "unitPrice": 99.99,
+  "unitPeriod": "MONTHLY",
+  "description": "Advanced product",
+  "notes": "Internal remark"
 }
 ```
 
@@ -94,63 +84,93 @@ node server.js
 ## 🔗 Subscription APIs
 
 | Method | Endpoint | Description |
-|:---|:---|:---|
-| `POST` | `/api/subscriptions/client/:clientId` | Create a subscription for a client |
-| `PUT` | `/api/subscriptions/:id` | Update a subscription's start date, end date, or status |
+|--------|----------|-------------|
+| `GET`  | `/api/subscriptions?page=1&pageLimit=10&status=Active` | Fetch paginated list of subscriptions with filters |
+| `GET`  | `/api/subscriptions/:id` | Get subscription by ID |
+| `POST` | `/api/subscriptions/client/:clientId` | Create subscription for a client |
+| `PUT`  | `/api/subscriptions/:id` | Update a subscription |
 | `DELETE` | `/api/subscriptions/:id` | Delete a subscription |
 
-### ➡ Request Body (POST `/api/subscriptions/client/:clientId`)
+### Sample Request Body
 
 ```json
 {
-  "productId": 2,
-  "startDate": "2025-05-01",
-  "endDate": "2026-05-01",
-  "status": "Active"
+  "productId": "uuid-product-id",
+  "startDate": "2025-01-01",
+  "endDate": "2026-01-01",
+  "status": "Active",
+  "term": "12 months",
+  "discount": 10.0
 }
 ```
 
-### ➡ Request Body (PUT `/api/subscriptions/:id`)
+---
+
+## 🧾 Invoice APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET`  | `/api/invoices?subscriptionId=...&page=1&pageLimit=10` | Get invoices with optional filters |
+| `POST` | `/api/invoices` | Create invoice |
+| `PUT`  | `/api/invoices/:id` | Update invoice |
+| `DELETE` | `/api/invoices/:id` | Delete invoice |
+
+### Sample Request Body
 
 ```json
 {
-  "startDate": "2025-06-01",
-  "endDate": "2026-06-01",
-  "status": "Paused"
+  "subscriptionId": "uuid-subscription-id",
+  "refNo": "INV-202505",
+  "xeroId": "xero-abc-123",
+  "amount": 299.99,
+  "createdBy": "system",
+  "payDate": "2025-06-01",
+  "serviceStart": "2025-05-01",
+  "serviceEnd": "2025-06-01"
 }
 ```
+
+---
+
+## 🪵 Change Log APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET`  | `/api/changelogs?page=1&pageLimit=10&type=Client&action=CREATE_CLIENT` | Get filtered change logs |
+
+---
+
+## 📊 Dashboard Metrics
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET`  | `/api/dashboard/metrics` | Returns aggregated dashboard metrics |
 
 ---
 
 ## 📋 Status Codes
 
-| Status Code | Meaning |
-|:---|:---|
-| `200 OK` | Successful operation |
-| `201 Created` | Successfully created resource |
-| `400 Bad Request` | Invalid request parameters |
-| `404 Not Found` | Resource not found |
-| `500 Internal Server Error` | Server error |
+| Code | Meaning |
+|------|---------|
+| `200 OK` | Success |
+| `201 Created` | Created |
+| `400 Bad Request` | Invalid data |
+| `404 Not Found` | Resource missing |
+| `500 Internal Server Error` | Unexpected error |
 
 ---
 
-# 📌 Notes
+## 🌐 Notes
 
-- All dates should be formatted as **ISO 8601 strings** (e.g., `"2025-05-01"`).
-- All IDs (`clientId`, `productId`, `subscriptionId`) are **integers**.
-- Error responses will return a JSON object with an `error` message.
-- CORS is enabled for frontend access.
+- All date fields are ISO 8601 (`"2025-05-01T00:00:00Z"`)
+- All IDs are UUIDs
+- Pagination supported with `page` and `pageLimit`
+- Response format includes: `page`, `pageLimit`, `total`, `totalPages`, and `itemsInPage`
 
 ---
 
-# 📣 Example Base URL for API Requests
-
-If backend is running locally:
+## 📣 Example Base URL for API
 
 ```
 http://localhost:5000/api/
 ```
-
----
-
-# 🏁 End of API Documentation

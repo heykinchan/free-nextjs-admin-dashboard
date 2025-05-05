@@ -15,6 +15,7 @@ const productRoutes = require('./routes/products');
 const subscriptionRoutes = require('./routes/subscriptions');
 const changeLogRoutes = require('./routes/changelogs');
 const keyMetricsRoutes = require('./routes/keyMetrics');
+const invoiceRoutes = require('./routes/invoices');
 
 // Use routes
 app.use('/api/clients', clientRoutes);
@@ -22,6 +23,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/changelogs', changeLogRoutes);
 app.use('/api', keyMetricsRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // Test route
 app.get('/', (req, res) => {
