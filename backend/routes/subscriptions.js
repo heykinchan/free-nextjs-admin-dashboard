@@ -3,19 +3,60 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// GET /subscriptions
+// Supports filters: clientId, productId, status, term
+// Supports pagination: page, pageLimit
+router.get('/', async (req, res) => {
+  const {
+    clientId,
+    productId,
+    status,
+    term,
+    page = 1,
+    pageLimit = 20
+  } = req.query;
 
-// Get subscriptions for a specific client
-router.get('/client/:clientId', async (req, res) => {
-  const { clientId } = req.params;
+  const parsedPage = Math.max(1, parseInt(page));
+  const parsedLimit = Math.max(1, parseInt(pageLimit));
+  const skip = (parsedPage - 1) * parsedLimit;
+
+  // Build dynamic filter object
+  const filter = {
+    ...(clientId && { clientId }),
+    ...(productId && { productId }),
+    ...(status && { status }),
+    ...(term && { term }),
+  };
+
   try {
-    const subscriptions = await prisma.subscription.findMany({
-      where: { clientId: Number(clientId) },
-      include: { product: true }, // If you want product name shown in form
+    const [subscriptions, total] = await Promise.all([
+      prisma.subscription.findMany({
+        where: filter,
+        skip,
+        take: parsedLimit,
+        orderBy: { startDate: 'desc' },
+        include: {
+          client: true,
+          product: true,
+        }
+      }),
+      prisma.subscription.count({ where: filter })
+    ]);
+
+    const totalPages = Math.ceil(total / parsedLimit);
+    const itemsInPage = subscriptions.length;
+
+    res.json({
+      page: parsedPage,
+      pageLimit: parsedLimit,
+      total,
+      totalPages,
+      itemsInPage,
+      data: subscriptions
     });
-    res.json(subscriptions);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch client subscriptions' });
+    res.status(500).json({ error: 'Failed to fetch subscriptions' });
   }
 });
 
@@ -24,8 +65,8 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const subscription = await prisma.subscription.findUnique({
-      where: { id: Number(id) },
-      include: { product: true, client: true }, // optional: include related info
+      where: { id },
+      include: { product: true, client: true },
     });
 
     if (!subscription) {
@@ -42,24 +83,28 @@ router.get('/:id', async (req, res) => {
 // Create a subscription for a client
 router.post('/client/:clientId', async (req, res) => {
   const { clientId } = req.params;
-  const { productId, startDate, endDate, status, customPrice } = req.body;
+  const { productId, startDate, endDate, status, discount, term } = req.body;
+
   try {
     const subscription = await prisma.subscription.create({
       data: {
-        clientId: Number(clientId),
-        productId: Number(productId),
+        clientId,
+        productId,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         status,
-        customPrice: customPrice ? parseFloat(customPrice) : undefined,
+        discount: discount ? parseFloat(discount) : undefined,
+        term
       }
     });
 
-    // Log the creation
     await prisma.changeLog.create({
       data: {
+        type: 'Subscription',
+        recordId: subscription.id,
         action: 'CREATE_SUBSCRIPTION',
-        details: `Subscription ${subscription.id} created for client ${subscription.clientId} with product ${subscription.productId}`,
+        details: `Subscription created for client ${clientId} to product ${productId}.`,
+        actionBy: 'API'
       },
     });
 
@@ -73,23 +118,27 @@ router.post('/client/:clientId', async (req, res) => {
 // Update a subscription
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { startDate, endDate, status, customPrice } = req.body;
+  const { startDate, endDate, status, discount, term } = req.body;
+
   try {
     const updatedSubscription = await prisma.subscription.update({
-      where: { id: Number(id) },
+      where: { id },
       data: {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         status,
-        customPrice: customPrice ? parseFloat(customPrice) : undefined,
+        discount: discount ? parseFloat(discount) : undefined,
+        term
       }
     });
 
-    // Log the update
     await prisma.changeLog.create({
       data: {
+        type: 'Subscription',
+        recordId: updatedSubscription.id,
         action: 'UPDATE_SUBSCRIPTION',
-        details: `Subscription ${updatedSubscription.id} updated with status ${updatedSubscription.status}`,
+        details: `Updated subscription ${updatedSubscription.id} with status ${updatedSubscription.status}.`,
+        actionBy: 'API'
       },
     });
 
@@ -103,26 +152,25 @@ router.put('/:id', async (req, res) => {
 // Delete a subscription
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
+
   try {
-    // Fetch subscription first
     const subscriptionToDelete = await prisma.subscription.findUnique({
-      where: { id: Number(id) }
+      where: { id }
     });
 
     if (!subscriptionToDelete) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
 
-    // Delete subscription
-    await prisma.subscription.delete({
-      where: { id: Number(id) }
-    });
+    await prisma.subscription.delete({ where: { id } });
 
-    // Log the deletion
     await prisma.changeLog.create({
       data: {
+        type: 'Subscription',
+        recordId: subscriptionToDelete.id,
         action: 'DELETE_SUBSCRIPTION',
-        details: `Subscription ${subscriptionToDelete.id} deleted for client ${subscriptionToDelete.clientId}`,
+        details: `Deleted subscription for client ${subscriptionToDelete.clientId}.`,
+        actionBy: 'API'
       },
     });
 

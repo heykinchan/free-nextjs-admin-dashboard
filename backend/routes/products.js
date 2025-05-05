@@ -3,11 +3,52 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all products
+// Get all products with optional filters and pagination
 router.get('/', async (req, res) => {
+  const {
+    name,
+    year,
+    unitPeriod,
+    createdBy,
+    page = 1,
+    pageLimit = 20
+  } = req.query;
+
+  const parsedPage = Math.max(1, parseInt(page));
+  const parsedLimit = Math.max(1, parseInt(pageLimit));
+  const skip = (parsedPage - 1) * parsedLimit;
+
+  const filter = {
+    ...(name && { name: { contains: name, mode: 'insensitive' } }),
+    ...(year && { year: parseInt(year) }),
+    ...(unitPeriod && { unitPeriod }),
+    ...(createdBy && { createdBy: { contains: createdBy, mode: 'insensitive' } }),
+  };
+
   try {
-    const products = await prisma.product.findMany();
-    res.json(products);
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where: Object.keys(filter).length ? filter : undefined,
+        skip,
+        take: parsedLimit,
+        orderBy: { createdOn: 'desc' },
+      }),
+      prisma.product.count({
+        where: Object.keys(filter).length ? filter : undefined,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / parsedLimit);
+    const itemsInPage = products.length;
+
+    res.json({
+      page: parsedPage,
+      pageLimit: parsedLimit,
+      total,
+      totalPages,
+      itemsInPage,
+      data: products,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -19,7 +60,7 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const product = await prisma.product.findUnique({
-      where: { id: Number(id) }
+      where: { id } // UUID, no Number()
     });
 
     if (!product) {
@@ -35,17 +76,36 @@ router.get('/:id', async (req, res) => {
 
 // Create a product
 router.post('/', async (req, res) => {
-  const { name, price, description } = req.body;
+  const {
+    name,
+    year,
+    createdBy,
+    unitPrice,
+    unitPeriod,
+    description,
+    notes
+  } = req.body;
+
   try {
     const product = await prisma.product.create({
-      data: { name, price, description }
+      data: {
+        name,
+        year,
+        createdBy,
+        unitPrice,
+        unitPeriod,
+        description,
+        notes
+      }
     });
 
-    // Also log the change
     await prisma.changeLog.create({
       data: {
+        type: 'Product',
+        recordId: product.id,
         action: 'CREATE_PRODUCT',
-        details: `Product ${product.name} created with price ${product.price} and description ${product.description}`,
+        details: `Created product ${product.name} at $${product.unitPrice}/${product.unitPeriod.toLowerCase()}.`,
+        actionBy: 'API'
       },
     });
 
@@ -59,18 +119,38 @@ router.post('/', async (req, res) => {
 // Update a product
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, price, description } = req.body;
+  const {
+    name,
+    year,
+    updatedBy,
+    unitPrice,
+    unitPeriod,
+    description,
+    notes
+  } = req.body;
+
   try {
     const updatedProduct = await prisma.product.update({
-      where: { id: Number(id) },
-      data: { name, price, description }
+      where: { id },
+      data: {
+        name,
+        year,
+        updatedBy,
+        unitPrice,
+        unitPeriod,
+        description,
+        notes,
+        updatedOn: new Date()
+      }
     });
 
-    // Also log the change
     await prisma.changeLog.create({
       data: {
+        type: 'Product',
+        recordId: updatedProduct.id,
         action: 'UPDATE_PRODUCT',
-        details: `Product ${updatedProduct.id} called ${updatedProduct.name} updated with price ${updatedProduct.price} and description ${updatedProduct.description}`,
+        details: `Updated product ${updatedProduct.name} to $${updatedProduct.unitPrice}/${updatedProduct.unitPeriod.toLowerCase()}.`,
+        actionBy: 'API'
       },
     });
 
@@ -84,26 +164,23 @@ router.put('/:id', async (req, res) => {
 // Delete a product
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
+
   try {
-    // Fetch the product first
-    const productToDelete = await prisma.product.findUnique({
-      where: { id: Number(id) }
-    });
+    const productToDelete = await prisma.product.findUnique({ where: { id } });
 
     if (!productToDelete) {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Now delete it
-    await prisma.product.delete({
-      where: { id: Number(id) }
-    });
+    await prisma.product.delete({ where: { id } });
 
-    // Log the deletion
     await prisma.changeLog.create({
       data: {
+        type: 'Product',
+        recordId: productToDelete.id,
         action: 'DELETE_PRODUCT',
-        details: `Product ${productToDelete.id} called ${productToDelete.name} with price ${productToDelete.price} and description "${productToDelete.description}" has been deleted.`,
+        details: `Deleted product ${productToDelete.name}.`,
+        actionBy: 'API'
       },
     });
 
