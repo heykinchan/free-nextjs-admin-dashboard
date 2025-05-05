@@ -1,10 +1,12 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-export async function fetchClients(page = 1, pageLimit = 20) {
-  const res = await fetch(`${API_URL}/clients?page=${page}&pageLimit=${pageLimit}`);
+export async function fetchClients(params: Record<string, any> = {}) {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetch(`${API_URL}/clients${query ? `?${query}` : ''}`);
   if (!res.ok) throw new Error('Failed to fetch clients');
   return res.json();
 }
+
 
 export async function createClient(data: { name: string; email: string }) {
   const res = await fetch(`${API_URL}/clients`, {

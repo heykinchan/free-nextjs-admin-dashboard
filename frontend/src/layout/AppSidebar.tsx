@@ -56,6 +56,7 @@ const navItems: NavItem[] = [
           subItems: [
               { name: "List of Clients", path: "/clients-table", pro: false },
               { name: "Change Logs", path: "/changeLog-table", pro: false },
+              { name: "Invoices", path: "/invoices-table", pro: false },
               ],
         },
 
