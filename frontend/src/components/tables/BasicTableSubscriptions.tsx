@@ -1,7 +1,8 @@
 "use client";
 
-import { fetchClients } from "@/lib/api";
-import React, { useEffect, useState } from "react";
+import { fetchSubscriptions } from "@/lib/api/subscription.api";
+import React, { useEffect } from "react";
+import usePaginatedData from "@/hooks/usePaginatedData";
 import {
   Table,
   TableBody,
@@ -12,42 +13,26 @@ import {
 import Button from "../ui/button/Button";
 
 export default function BasicTableSubscriptions() {
-  const [subscriptions, setSubscriptions] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10; // 10 subscriptions per page
+  const {
+    data: subscriptions,
+    currentPage,
+    totalPages,
+    goToNextPage,
+    goToPreviousPage,
+    setData,
+  } = usePaginatedData();
 
   useEffect(() => {
     async function loadSubscriptions() {
       try {
-        const clients = await fetchClients();
-        const allSubscriptions = clients.flatMap((client: any) =>
-          client.subscriptions.map((sub: any) => ({
-            ...sub,
-            clientName: client.name,
-          }))
-        );
-        setSubscriptions(allSubscriptions);
+        const response = await fetchSubscriptions(currentPage, 10);
+        setData(response);
       } catch (error) {
         console.error("Failed to load subscriptions:", error);
       }
     }
-
     loadSubscriptions();
-  }, []);
-
-  const totalPages = Math.ceil(subscriptions.length / pageSize);
-  const displayedSubscriptions = subscriptions.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  const handlePrevious = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
-  };
+  }, [currentPage, setData]);
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -56,48 +41,23 @@ export default function BasicTableSubscriptions() {
           <Table>
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
-                <TableCell isHeader className="px-5 py-3 text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Client Name
-                </TableCell>
-                <TableCell isHeader className="px-5 py-3 text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Product Name
-                </TableCell>
-                <TableCell isHeader className="px-5 py-3 text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Status
-                </TableCell>
-                <TableCell isHeader className="px-5 py-3 text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Start Date
-                </TableCell>
-                <TableCell isHeader className="px-5 py-3 text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  End Date
-                </TableCell>
-                <TableCell isHeader className="px-5 py-3 text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Custom Price
-                </TableCell>
+                {["Client", "Product", "Status", "Start Date", "End Date", "Custom Price"].map((header) => (
+                  <TableCell key={header} isHeader className="px-5 py-3 text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                    {header}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHeader>
 
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {displayedSubscriptions.map((sub) => (
+              {subscriptions.map((sub) => (
                 <TableRow key={sub.id}>
-                  <TableCell className="px-5 py-4 text-start">
-                    {sub.clientName}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">
-                    {sub.product?.name}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">
-                    {sub.status}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">
-                    {new Date(sub.startDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">
-                    {new Date(sub.endDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">
-                    {sub.customPrice ? `$${sub.customPrice.toFixed(2)}` : "-"}
-                  </TableCell>
+                  <TableCell className="px-5 py-4 text-start">{sub.client?.name}</TableCell>
+                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">{sub.product?.name}</TableCell>
+                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">{sub.status}</TableCell>
+                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">{new Date(sub.startDate).toLocaleDateString()}</TableCell>
+                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">{new Date(sub.endDate).toLocaleDateString()}</TableCell>
+                  <TableCell className="px-4 py-3 text-start text-theme-sm dark:text-gray-400">{sub.customPrice ? `$${sub.customPrice.toFixed(2)}` : "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -105,17 +65,10 @@ export default function BasicTableSubscriptions() {
         </div>
       </div>
 
-      {/* Pagination Controls */}
       <div className="flex justify-between items-center mt-4">
-        <Button onClick={handlePrevious} disabled={currentPage === 1}>
-          Previous
-        </Button>
-        <span className="text-gray-600 text-sm">
-          Page {currentPage} of {totalPages}
-        </span>
-        <Button onClick={handleNext} disabled={currentPage === totalPages}>
-          Next
-        </Button>
+        <Button onClick={goToPreviousPage} disabled={currentPage === 1}>Previous</Button>
+        <span className="text-gray-600 text-sm">Page {currentPage} of {totalPages}</span>
+        <Button onClick={goToNextPage} disabled={currentPage === totalPages}>Next</Button>
       </div>
     </div>
   );
